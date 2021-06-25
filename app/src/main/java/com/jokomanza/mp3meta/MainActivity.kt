@@ -67,12 +67,10 @@ class MainActivity : AppCompatActivity() {
                 Log.d("Result", "Second Response : $song")
 
                 Log.d("Result", "URL : ${song.response.song.url}")
-                val doc = Jsoup.connect(song.response.song.url).get();
-                val paragraphs = doc.select("div.lyrics");
-                val result = paragraphs?.first()?.text();
-                Log.d("Result", "Final Result : $paragraphs")
-                Log.d("Result", "Final Result : $result")
 
+                viewModel.getWebPage(song.response.song.url).observe(this, { result ->
+                    Log.d("Result", "Final Result : $result")
+                })
             })
         })
 

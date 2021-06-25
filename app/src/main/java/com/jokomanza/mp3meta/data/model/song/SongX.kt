@@ -9,7 +9,7 @@ data class SongX(
     val current_user_metadata: CurrentUserMetadata,
     val custom_performances: List<Any>,
 //    val description: Description,
-    val description_annotation: DescriptionAnnotation,
+//    val description_annotation: DescriptionAnnotation,
     val embed_content: String,
     val featured_artists: List<Any>,
     val featured_video: Boolean,

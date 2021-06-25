@@ -9,6 +9,8 @@ import kotlinx.coroutines.InternalCoroutinesApi
 import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.onStart
+import kotlinx.coroutines.launch
+import org.jsoup.Jsoup
 
 class MainActivityViewModel : ViewModel() {
 
@@ -34,5 +36,14 @@ class MainActivityViewModel : ViewModel() {
             .collect {
                 emit(it)
             }
+    }
+
+    fun getWebPage(url: String): LiveData<String> = liveData {
+        viewModelScope.launch {
+            val doc = Jsoup.connect(url).get();
+            val paragraphs = doc.select("div.lyrics");
+            val result = paragraphs?.first()?.text();
+            emit(result?: "null")
+        }
     }
 }
