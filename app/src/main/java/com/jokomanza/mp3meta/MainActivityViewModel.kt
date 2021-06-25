@@ -5,11 +5,13 @@ import androidx.lifecycle.*
 import com.jokomanza.mp3meta.data.model.search.Search
 import com.jokomanza.mp3meta.data.model.song.Song
 import com.jokomanza.mp3meta.data.repository.GeniusRepository
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.InternalCoroutinesApi
 import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.onStart
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import org.jsoup.Jsoup
 
 class MainActivityViewModel : ViewModel() {
@@ -39,7 +41,7 @@ class MainActivityViewModel : ViewModel() {
     }
 
     fun getWebPage(url: String): LiveData<String> = liveData {
-        viewModelScope.launch {
+        viewModelScope.launch (Dispatchers.IO) {
             val doc = Jsoup.connect(url).get();
             val paragraphs = doc.select("div.lyrics");
             val result = paragraphs?.first()?.text();
