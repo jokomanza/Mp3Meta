@@ -43,9 +43,8 @@ class MainActivityViewModel : ViewModel() {
     fun getWebPage(url: String): LiveData<String> = liveData {
         viewModelScope.launch (Dispatchers.IO) {
             val doc = Jsoup.connect(url).get();
-            val paragraphs = doc.select("div.lyrics");
-            val result = paragraphs?.first()?.text();
-            emit(result?: "null")
+            val result = doc.select(".Lyrics__Container")
+            emit(result.toString())
         }
     }
 }
