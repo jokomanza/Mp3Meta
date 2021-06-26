@@ -53,11 +53,8 @@ class MainActivityViewModel : ViewModel() {
             }
             .collect {
                 val doc = Jsoup.parse(it)
-                doc.select("div.lyrics")
-                doc.outputSettings(Document.OutputSettings().prettyPrint(false));//makes html() preserve linebreaks and spacing
-                doc.select("br").append("\\n");
-                doc.select("p").prepend("\\n\\n");
-                val s = doc.html().replace("\\\\n", "\n");
+                doc.outputSettings(Document.OutputSettings().prettyPrint(false));
+                val s = doc.select("div.lyrics").html()
                 emit(Jsoup.clean(s, "", Whitelist.none(),  Document.OutputSettings().prettyPrint(false)))
             }
     }
