@@ -1,5 +1,6 @@
 package com.jokomanza.mp3meta.data.api
 
+import com.jokomanza.mp3meta.data.model.Page
 import com.jokomanza.mp3meta.data.model.search.Search
 import com.jokomanza.mp3meta.data.model.song.Song
 import retrofit2.http.GET
@@ -20,4 +21,10 @@ interface GeniusApi {
     )
     @GET("songs/{id}")
     suspend fun getSong(@Path("id") id: String) : Song
+
+    @Headers(
+        "User-Agent: Mozilla/5.0 (Linux; Android 6.0; Nexus 5 Build/MRA58N) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/89.0.4389.128 Mobile Safari/537.36"
+    )
+    @GET("{id}")
+    suspend fun getPage(@Path("id") id: String) : String
 }

@@ -40,6 +40,20 @@ class MainActivityViewModel : ViewModel() {
             }
     }
 
+    @InternalCoroutinesApi
+    fun getPage(id: String): LiveData<String> = liveData {
+        repository.getPage(id)
+            .onStart { /* emit loading state */ }
+            .catch { exception ->
+                Log.d("Result", "getPage: Error $exception")
+            }
+            .collect {
+                val doc = Jsoup.parse(it)
+                val result = doc.select("div.lyrics")
+                emit(result.text())
+            }
+    }
+
     fun getWebPage(url: String): LiveData<String> = liveData {
         viewModelScope.launch (Dispatchers.IO) {
             val doc = Jsoup.connect(url).get();

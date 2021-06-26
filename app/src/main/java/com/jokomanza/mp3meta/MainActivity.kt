@@ -61,14 +61,15 @@ class MainActivity : AppCompatActivity() {
 
         val viewModel = MainActivityViewModel()
 
-        viewModel.search("What Makes you beautiful").observe(this, {
+        viewModel.search("Hikaru Nara").observe(this, {
             Log.d("Result", "First Response : $it")
             viewModel.getSong(it.response.hits[0].result.id.toString()).observe(this, { song ->
                 Log.d("Result", "Second Response : $song")
 
                 Log.d("Result", "URL : ${song.response.song.url}")
 
-                viewModel.getWebPage(song.response.song.url).observe(this, { result ->
+                val url = song.response.song.url.substring(19)
+                viewModel.getPage(url).observe(this, { result ->
                     Log.d("Result", "Final Result : $result")
                 })
             })
