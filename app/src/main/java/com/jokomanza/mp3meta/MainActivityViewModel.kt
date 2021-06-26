@@ -55,7 +55,7 @@ class MainActivityViewModel : ViewModel() {
                 val doc = Jsoup.parse(it)
                 doc.outputSettings(Document.OutputSettings().prettyPrint(false));
                 val s = doc.select("div.lyrics").html()
-                emit(Jsoup.clean(s, "", Whitelist.none(),  Document.OutputSettings().prettyPrint(false)))
+                emit(Jsoup.clean(s, "", Whitelist.none(),  Document.OutputSettings().prettyPrint(false)).trim())
             }
     }
 
