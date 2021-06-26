@@ -1,6 +1,8 @@
 package com.jokomanza.mp3meta
 
+import android.os.Build
 import android.util.Log
+import androidx.annotation.RequiresApi
 import androidx.lifecycle.*
 import com.jokomanza.mp3meta.data.model.search.Search
 import com.jokomanza.mp3meta.data.model.song.Song
@@ -11,8 +13,10 @@ import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.onStart
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
 import org.jsoup.Jsoup
+import org.jsoup.nodes.Document
+import org.jsoup.safety.Whitelist
+
 
 class MainActivityViewModel : ViewModel() {
 
@@ -49,8 +53,12 @@ class MainActivityViewModel : ViewModel() {
             }
             .collect {
                 val doc = Jsoup.parse(it)
-                val result = doc.select("div.lyrics")
-                emit(result.text())
+                doc.select("div.lyrics")
+                doc.outputSettings(Document.OutputSettings().prettyPrint(false));//makes html() preserve linebreaks and spacing
+                doc.select("br").append("\\n");
+                doc.select("p").prepend("\\n\\n");
+                val s = doc.html().replace("\\\\n", "\n");
+                emit(Jsoup.clean(s, "", Whitelist.none(),  Document.OutputSettings().prettyPrint(false)))
             }
     }
 

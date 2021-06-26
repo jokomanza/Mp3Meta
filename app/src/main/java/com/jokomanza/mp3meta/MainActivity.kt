@@ -1,19 +1,27 @@
 package com.jokomanza.mp3meta
 
+import android.Manifest
 import android.app.Activity
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.os.Bundle
 import android.util.Log
+import android.widget.TextView
 import android.widget.Toast
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
 import com.developer.filepicker.model.DialogConfigs
 import com.developer.filepicker.model.DialogProperties
 import com.developer.filepicker.view.FilePickerDialog
-import com.mpatric.mp3agic.Mp3File
+import com.karumi.dexter.Dexter
+import com.karumi.dexter.PermissionToken
+import com.karumi.dexter.listener.PermissionDeniedResponse
+import com.karumi.dexter.listener.PermissionGrantedResponse
+import com.karumi.dexter.listener.PermissionRequest
+import com.karumi.dexter.listener.single.PermissionListener
+import ealvatag.audio.AudioFileIO
+import ealvatag.tag.FieldKey
 import kotlinx.coroutines.InternalCoroutinesApi
-import org.jsoup.Jsoup
 import java.io.File
 
 
@@ -25,6 +33,29 @@ class MainActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
+
+        val viewModel = MainActivityViewModel()
+
+        Dexter.withContext(this)
+            .withPermission(Manifest.permission.WRITE_EXTERNAL_STORAGE)
+            .withListener(object : PermissionListener {
+                override fun onPermissionGranted(p0: PermissionGrantedResponse?) {
+                    println("Permission Granted")
+                }
+
+                override fun onPermissionDenied(p0: PermissionDeniedResponse?) {
+                    println("Permission Denied")
+                }
+
+                override fun onPermissionRationaleShouldBeShown(
+                    p0: PermissionRequest?,
+                    p1: PermissionToken?
+                ) {
+                    println("onPermissionRationaleShouldBeShown")
+                }
+
+            })
+            .check()
 
         val properties = DialogProperties()
         properties.selection_mode = DialogConfigs.SINGLE_MODE
@@ -41,39 +72,39 @@ class MainActivity : AppCompatActivity() {
             //files is the array of the paths of files selected by the Application User.
             it.forEach {
                 Log.d("Result", "onCreate: $it")
-                val mp3file = Mp3File(File(it))
-                println("Length of this mp3 is: " + mp3file.lengthInSeconds + " seconds")
-                println("Bitrate: " + mp3file.bitrate + " kbps " + if (mp3file.isVbr) "(VBR)" else "(CBR)")
-                println("Sample rate: " + mp3file.sampleRate + " Hz")
-                println("Has ID3v1 tag?: " + if (mp3file.hasId3v1Tag()) "YES" else "NO")
-                println("Has ID3v2 tag?: " + if (mp3file.hasId3v2Tag()) "YES" else "NO")
-                println("Has custom tag?: " + if (mp3file.hasCustomTag()) "YES" else "NO")
+                val file = File(it)
+                val audioFile = AudioFileIO.read(file)
+//                audioFile.tag.get().deleteField(FieldKey.LYRICS)
+//                audioFile.save()
 
-                println(mp3file.id3v2Tag.lyrics)
+                val lyrics = audioFile.tag.get().getFields(FieldKey.LYRICS)
+                println("Old Lyrics : $lyrics")
+                viewModel.search(file.nameWithoutExtension).observe(this, {
+                    Log.d("Result", "First Response : $it")
+                    viewModel.getSong(it.response.hits[0].result.id.toString())
+                        .observe(this, { song ->
+                            Log.d("Result", "Second Response : $song")
 
+                            Log.d("Result", "URL : ${song.response.song.url}")
+
+                            val url = song.response.song.url.substring(19)
+                            viewModel.getPage(url).observe(this, { result ->
+                                Log.d("Result", "Final Result : ${result}")
+                                audioFile.tag.get().setField(FieldKey.LYRICS, result)
+                                audioFile.save()
+                                println(
+                                    "New Lyrics : " + audioFile.tag.get().getFields(FieldKey.LYRICS)
+                                )
+                                findViewById<TextView>(R.id.hello_world).text = result
+                            })
+                        })
+                })
             }
         }
 
-//        dialog.show()
-
-
-
-
-        val viewModel = MainActivityViewModel()
-
-        viewModel.search("Hikaru Nara").observe(this, {
-            Log.d("Result", "First Response : $it")
-            viewModel.getSong(it.response.hits[0].result.id.toString()).observe(this, { song ->
-                Log.d("Result", "Second Response : $song")
-
-                Log.d("Result", "URL : ${song.response.song.url}")
-
-                val url = song.response.song.url.substring(19)
-                viewModel.getPage(url).observe(this, { result ->
-                    Log.d("Result", "Final Result : $result")
-                })
-            })
-        })
+        findViewById<TextView>(R.id.hello_world).setOnClickListener {
+            dialog.show()
+        }
 
 //        openSomeActivityForResult()
     }
@@ -91,7 +122,7 @@ class MainActivity : AppCompatActivity() {
         val intent = Intent(Intent.ACTION_GET_CONTENT).apply {
             addCategory(Intent.CATEGORY_OPENABLE)
             type = "audio/*"
-            Intent.createChooser(this, "Choose a file");
+            Intent.createChooser(this, "Choose a file")
         }
         resultLauncher.launch(intent)
     }
